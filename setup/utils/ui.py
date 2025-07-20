@@ -13,30 +13,33 @@ from enum import Enum
 try:
     import colorama
     from colorama import Fore, Back, Style
+
     colorama.init(autoreset=True)
     COLORAMA_AVAILABLE = True
 except ImportError:
     COLORAMA_AVAILABLE = False
+
     # Fallback color codes for Unix-like systems
     class MockFore:
-        RED = '\033[91m' if sys.platform != 'win32' else ''
-        GREEN = '\033[92m' if sys.platform != 'win32' else ''
-        YELLOW = '\033[93m' if sys.platform != 'win32' else ''
-        BLUE = '\033[94m' if sys.platform != 'win32' else ''
-        MAGENTA = '\033[95m' if sys.platform != 'win32' else ''
-        CYAN = '\033[96m' if sys.platform != 'win32' else ''
-        WHITE = '\033[97m' if sys.platform != 'win32' else ''
-    
+        RED = "\033[91m" if sys.platform != "win32" else ""
+        GREEN = "\033[92m" if sys.platform != "win32" else ""
+        YELLOW = "\033[93m" if sys.platform != "win32" else ""
+        BLUE = "\033[94m" if sys.platform != "win32" else ""
+        MAGENTA = "\033[95m" if sys.platform != "win32" else ""
+        CYAN = "\033[96m" if sys.platform != "win32" else ""
+        WHITE = "\033[97m" if sys.platform != "win32" else ""
+
     class MockStyle:
-        RESET_ALL = '\033[0m' if sys.platform != 'win32' else ''
-        BRIGHT = '\033[1m' if sys.platform != 'win32' else ''
-    
+        RESET_ALL = "\033[0m" if sys.platform != "win32" else ""
+        BRIGHT = "\033[1m" if sys.platform != "win32" else ""
+
     Fore = MockFore()
     Style = MockStyle()
 
 
 class Colors:
     """Color constants for console output"""
+
     RED = Fore.RED
     GREEN = Fore.GREEN
     YELLOW = Fore.YELLOW
@@ -50,11 +53,11 @@ class Colors:
 
 class ProgressBar:
     """Cross-platform progress bar with customizable display"""
-    
-    def __init__(self, total: int, width: int = 50, prefix: str = '', suffix: str = ''):
+
+    def __init__(self, total: int, width: int = 50, prefix: str = "", suffix: str = ""):
         """
         Initialize progress bar
-        
+
         Args:
             total: Total number of items to process
             width: Width of progress bar in characters
@@ -67,29 +70,31 @@ class ProgressBar:
         self.suffix = suffix
         self.current = 0
         self.start_time = time.time()
-        
+
         # Get terminal width for responsive display
         try:
             self.terminal_width = shutil.get_terminal_size().columns
         except OSError:
             self.terminal_width = 80
-    
-    def update(self, current: int, message: str = '') -> None:
+
+    def update(self, current: int, message: str = "") -> None:
         """
         Update progress bar
-        
+
         Args:
             current: Current progress value
             message: Optional message to display
         """
         self.current = current
         percent = min(100, (current / self.total) * 100) if self.total > 0 else 100
-        
+
         # Calculate filled and empty portions
-        filled_width = int(self.width * current / self.total) if self.total > 0 else self.width
-        filled = '█' * filled_width
-        empty = '░' * (self.width - filled_width)
-        
+        filled_width = (
+            int(self.width * current / self.total) if self.total > 0 else self.width
+        )
+        filled = "█" * filled_width
+        empty = "░" * (self.width - filled_width)
+
         # Calculate elapsed time and ETA
         elapsed = time.time() - self.start_time
         if current > 0:
@@ -97,47 +102,51 @@ class ProgressBar:
             eta_str = f" ETA: {self._format_time(eta)}"
         else:
             eta_str = ""
-        
+
         # Format progress line
         if message:
             status = f" {message}"
         else:
             status = ""
-        
+
         progress_line = (
             f"\r{self.prefix}[{Colors.GREEN}{filled}{Colors.WHITE}{empty}{Colors.RESET}] "
             f"{percent:5.1f}%{status}{eta_str}"
         )
-        
+
         # Truncate if too long for terminal
         max_length = self.terminal_width - 5
         if len(progress_line) > max_length:
             # Remove color codes for length calculation
-            plain_line = progress_line.replace(Colors.GREEN, '').replace(Colors.WHITE, '').replace(Colors.RESET, '')
+            plain_line = (
+                progress_line.replace(Colors.GREEN, "")
+                .replace(Colors.WHITE, "")
+                .replace(Colors.RESET, "")
+            )
             if len(plain_line) > max_length:
                 progress_line = progress_line[:max_length] + "..."
-        
-        print(progress_line, end='', flush=True)
-    
-    def increment(self, message: str = '') -> None:
+
+        print(progress_line, end="", flush=True)
+
+    def increment(self, message: str = "") -> None:
         """
         Increment progress by 1
-        
+
         Args:
             message: Optional message to display
         """
         self.update(self.current + 1, message)
-    
-    def finish(self, message: str = 'Complete') -> None:
+
+    def finish(self, message: str = "Complete") -> None:
         """
         Complete progress bar
-        
+
         Args:
             message: Completion message
         """
         self.update(self.total, message)
         print()  # New line after completion
-    
+
     def _format_time(self, seconds: float) -> str:
         """Format time duration as human-readable string"""
         if seconds < 60:
@@ -152,11 +161,11 @@ class ProgressBar:
 
 class Menu:
     """Interactive menu system with keyboard navigation"""
-    
+
     def __init__(self, title: str, options: List[str], multi_select: bool = False):
         """
         Initialize menu
-        
+
         Args:
             title: Menu title
             options: List of menu options
@@ -166,42 +175,46 @@ class Menu:
         self.options = options
         self.multi_select = multi_select
         self.selected = set() if multi_select else None
-        
+
     def display(self) -> int | List[int]:
         """
         Display menu and get user selection
-        
+
         Returns:
             Selected option index (single) or list of indices (multi-select)
         """
         print(f"\n{Colors.CYAN}{Colors.BRIGHT}{self.title}{Colors.RESET}")
         print("=" * len(self.title))
-        
+
         for i, option in enumerate(self.options, 1):
             if self.multi_select:
-                marker = "[x]" if i-1 in (self.selected or set()) else "[ ]"
+                marker = "[x]" if i - 1 in (self.selected or set()) else "[ ]"
                 print(f"{Colors.YELLOW}{i:2d}.{Colors.RESET} {marker} {option}")
             else:
                 print(f"{Colors.YELLOW}{i:2d}.{Colors.RESET} {option}")
-        
+
         if self.multi_select:
-            print(f"\n{Colors.BLUE}Enter numbers separated by commas (e.g., 1,3,5) or 'all' for all options:{Colors.RESET}")
+            print(
+                f"\n{Colors.BLUE}Enter numbers separated by commas (e.g., 1,3,5) or 'all' for all options:{Colors.RESET}"
+            )
         else:
-            print(f"\n{Colors.BLUE}Enter your choice (1-{len(self.options)}):{Colors.RESET}")
-        
+            print(
+                f"\n{Colors.BLUE}Enter your choice (1-{len(self.options)}):{Colors.RESET}"
+            )
+
         while True:
             try:
                 user_input = input("> ").strip().lower()
-                
+
                 if self.multi_select:
-                    if user_input == 'all':
+                    if user_input == "all":
                         return list(range(len(self.options)))
-                    elif user_input == '':
+                    elif user_input == "":
                         return []
                     else:
                         # Parse comma-separated numbers
                         selections = []
-                        for part in user_input.split(','):
+                        for part in user_input.split(","):
                             part = part.strip()
                             if part.isdigit():
                                 idx = int(part) - 1
@@ -218,10 +231,12 @@ class Menu:
                         if 0 <= choice < len(self.options):
                             return choice
                         else:
-                            print(f"{Colors.RED}Invalid choice. Please enter a number between 1 and {len(self.options)}.{Colors.RESET}")
+                            print(
+                                f"{Colors.RED}Invalid choice. Please enter a number between 1 and {len(self.options)}.{Colors.RESET}"
+                            )
                     else:
                         print(f"{Colors.RED}Please enter a valid number.{Colors.RESET}")
-                        
+
             except (ValueError, KeyboardInterrupt) as e:
                 if isinstance(e, KeyboardInterrupt):
                     print(f"\n{Colors.YELLOW}Operation cancelled.{Colors.RESET}")
@@ -233,39 +248,41 @@ class Menu:
 def confirm(message: str, default: bool = True) -> bool:
     """
     Ask for user confirmation
-    
+
     Args:
         message: Confirmation message
         default: Default response if user just presses Enter
-        
+
     Returns:
         True if confirmed, False otherwise
     """
     suffix = "[Y/n]" if default else "[y/N]"
     print(f"{Colors.BLUE}{message} {suffix}{Colors.RESET}")
-    
+
     while True:
         try:
             response = input("> ").strip().lower()
-            
-            if response == '':
+
+            if response == "":
                 return default
-            elif response in ['y', 'yes', 'true', '1']:
+            elif response in ["y", "yes", "true", "1"]:
                 return True
-            elif response in ['n', 'no', 'false', '0']:
+            elif response in ["n", "no", "false", "0"]:
                 return False
             else:
-                print(f"{Colors.RED}Please enter 'y' or 'n' (or press Enter for default).{Colors.RESET}")
-                
+                print(
+                    f"{Colors.RED}Please enter 'y' or 'n' (or press Enter for default).{Colors.RESET}"
+                )
+
         except KeyboardInterrupt:
             print(f"\n{Colors.YELLOW}Operation cancelled.{Colors.RESET}")
             return False
 
 
-def display_header(title: str, subtitle: str = '') -> None:
+def display_header(title: str, subtitle: str = "") -> None:
     """
     Display formatted header
-    
+
     Args:
         title: Main title
         subtitle: Optional subtitle
@@ -302,10 +319,10 @@ def display_step(step: int, total: int, message: str) -> None:
     print(f"{Colors.CYAN}[{step}/{total}] {message}{Colors.RESET}")
 
 
-def display_table(headers: List[str], rows: List[List[str]], title: str = '') -> None:
+def display_table(headers: List[str], rows: List[List[str]], title: str = "") -> None:
     """
     Display data in table format
-    
+
     Args:
         headers: Column headers
         rows: Data rows
@@ -313,29 +330,33 @@ def display_table(headers: List[str], rows: List[List[str]], title: str = '') ->
     """
     if not rows:
         return
-    
+
     # Calculate column widths
     col_widths = [len(header) for header in headers]
     for row in rows:
         for i, cell in enumerate(row):
             if i < len(col_widths):
                 col_widths[i] = max(col_widths[i], len(str(cell)))
-    
+
     # Display title
     if title:
         print(f"\n{Colors.CYAN}{Colors.BRIGHT}{title}{Colors.RESET}")
         print()
-    
+
     # Display headers
-    header_line = " | ".join(f"{header:<{col_widths[i]}}" for i, header in enumerate(headers))
+    header_line = " | ".join(
+        f"{header:<{col_widths[i]}}" for i, header in enumerate(headers)
+    )
     print(f"{Colors.YELLOW}{header_line}{Colors.RESET}")
     print("-" * len(header_line))
-    
+
     # Display rows
     for row in rows:
-        row_line = " | ".join(f"{str(cell):<{col_widths[i]}}" for i, cell in enumerate(row))
+        row_line = " | ".join(
+            f"{str(cell):<{col_widths[i]}}" for i, cell in enumerate(row)
+        )
         print(row_line)
-    
+
     print()
 
 
@@ -350,16 +371,17 @@ def wait_for_key(message: str = "Press Enter to continue...") -> None:
 def clear_screen() -> None:
     """Clear terminal screen"""
     import os
-    os.system('cls' if os.name == 'nt' else 'clear')
+
+    os.system("cls" if os.name == "nt" else "clear")
 
 
 class StatusSpinner:
     """Simple status spinner for long operations"""
-    
+
     def __init__(self, message: str = "Working..."):
         """
         Initialize spinner
-        
+
         Args:
             message: Message to display with spinner
         """
@@ -367,43 +389,47 @@ class StatusSpinner:
         self.spinning = False
         self.chars = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
         self.current = 0
-    
+
     def start(self) -> None:
         """Start spinner in background thread"""
         import threading
-        
+
         def spin():
             while self.spinning:
                 char = self.chars[self.current % len(self.chars)]
-                print(f"\r{Colors.BLUE}{char} {self.message}{Colors.RESET}", end='', flush=True)
+                print(
+                    f"\r{Colors.BLUE}{char} {self.message}{Colors.RESET}",
+                    end="",
+                    flush=True,
+                )
                 self.current += 1
                 time.sleep(0.1)
-        
+
         self.spinning = True
         self.thread = threading.Thread(target=spin, daemon=True)
         self.thread.start()
-    
-    def stop(self, final_message: str = '') -> None:
+
+    def stop(self, final_message: str = "") -> None:
         """
         Stop spinner
-        
+
         Args:
             final_message: Final message to display
         """
         self.spinning = False
-        if hasattr(self, 'thread'):
+        if hasattr(self, "thread"):
             self.thread.join(timeout=0.2)
-        
+
         # Clear spinner line
-        print(f"\r{' ' * (len(self.message) + 5)}\r", end='')
-        
+        print(f"\r{' ' * (len(self.message) + 5)}\r", end="")
+
         if final_message:
             print(final_message)
 
 
 def format_size(size_bytes: int) -> str:
     """Format file size in human-readable format"""
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
         if size_bytes < 1024.0:
             return f"{size_bytes:.1f} {unit}"
         size_bytes /= 1024.0
@@ -430,5 +456,5 @@ def truncate_text(text: str, max_length: int, suffix: str = "...") -> str:
     """Truncate text to maximum length with optional suffix"""
     if len(text) <= max_length:
         return text
-    
-    return text[:max_length - len(suffix)] + suffix
+
+    return text[: max_length - len(suffix)] + suffix
