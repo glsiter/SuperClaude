@@ -7,9 +7,9 @@ from .validator import Validator
 from .registry import ComponentRegistry
 
 __all__ = [
-    'ConfigManager',
-    'SettingsManager', 
-    'FileManager',
-    'Validator',
-    'ComponentRegistry'
+    "ConfigManager",
+    "SettingsManager",
+    "FileManager",
+    "Validator",
+    "ComponentRegistry",
 ]

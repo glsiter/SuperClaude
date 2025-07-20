@@ -3,4 +3,4 @@
 from .component import Component
 from .installer import Installer
 
-__all__ = ['Component', 'Installer']
+__all__ = ["Component", "Installer"]
